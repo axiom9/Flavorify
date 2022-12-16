@@ -1,2 +1,1 @@
-# spamham_dl
-Spam V. Ham but with a twist :)
+Let's see what we can accomplish this winter
