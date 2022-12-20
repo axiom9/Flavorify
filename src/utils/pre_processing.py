@@ -1,8 +1,13 @@
 '''Pre-processing for data'''
 
 import pandas as pd
-# import nltk
+import numpy as np
+import nltk
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import unicodedata
+# add appropriate words that will be ignored in the analysis
+ADDITIONAL_STOPWORDS = []
 import re
 
 def sculpt_df(text_file_loc: str, labels_loc: str) -> pd.DataFrame:
@@ -45,13 +50,28 @@ def convert_to_int(df: pd.DataFrame, column='Label') -> pd.DataFrame:
 
 def clean_text(text: list) -> list:
     '''Pass in the text as a list and this function will perform the following cleaning:
-    1.
+    1. Using partition method to remove the "@" and everything that follows it
     2.
     3.
     4.
     5.
     The function will return a list with the values cleaned in the same locations as passed in'''
-    pass
+    head, sep, tail = text.partition('@')
+    return head
+
+def remove_empty_strings(original_df:pd.DataFrame) -> pd.DataFrame:
+    '''After performing some cleaning, some of the text columns may have empty strings. This function simply
+    locates those rows where there is an empty string and drops that entire row. It will
+    return a new dataframe where it deals with the empty text rows (tweets) by dropping the row'''
+    df = original_df.copy()
+    df.Text.replace('', np.nan, inplace=True)
+    df.dropna(subset=['Text'], inplace=True)
+    df = df.reset_index(drop=True)
+
+    print(f'Found {len(original_df) - len(df)} containing empty string for text and dropped them')
+    return df
+
+
 
 def tokenize(text: str, lowercase:bool) -> list:
     '''Pass in UNTOKENIZED text as a string (note; this is the default format of the column
@@ -66,3 +86,19 @@ def tokenize(text: str, lowercase:bool) -> list:
         return word_tokenize((text).lower())
     elif not lowercase:
         return word_tokenize(text)
+
+
+def basic_clean(text):
+        """
+        A simple function to clean up the data. All the words that
+        are not designated as a stop word is then lemmatized after
+        encoding and basic regex parsing are performed.
+        """
+        wnl = nltk.stem.WordNetLemmatizer()
+        stopwords = nltk.corpus.stopwords.words('english') + ADDITIONAL_STOPWORDS
+        text = (unicodedata.normalize('NFKD', text)
+        .encode('ascii', 'ignore')
+        .decode('utf-8', 'ignore')
+        .lower())
+        words = re.sub(r'[^\w\s]', '', text).split()
+        return [wnl.lemmatize(word) for word in words if word not in stopwords]
