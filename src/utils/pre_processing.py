@@ -6,6 +6,9 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import unicodedata
+from scipy.stats import zscore
+from sklearn.model_selection import train_test_split
+
 # add appropriate words that will be ignored in the analysis
 ADDITIONAL_STOPWORDS = []
 import re
@@ -102,3 +105,59 @@ def basic_clean(text):
         .lower())
         words = re.sub(r'[^\w\s]', '', text).split()
         return [wnl.lemmatize(word) for word in words if word not in stopwords]
+
+
+def drop_outliers(original_df: pd.DataFrame, labels_to_clean:list, tokenized_text:pd.Series, z:int) -> pd.DataFrame:
+    '''This function drops outliers by identifying which tweets in a given label are for example greater than 3
+    z-score for mean average length of tweets in that specific label
+    This function will return a copy of the original df'''
+    
+    assert "Label" in original_df.columns
+    idxs_to_drop = []
+
+    for label in labels_to_clean:
+        tmp = tokenized_text[original_df.Label==label].apply(lambda row: len(row)) # Get the number of tokens
+        # now we can filter for > 3 or < -3 z-score for outliers
+        to_remove = (zscore(tmp) > z) | (zscore(tmp) < -z)
+        idxs_to_drop.extend(np.where(to_remove)[0].tolist()) # append all indices that need to be dropped into
+                                                            # 'idxs_to_drop'
+        print(f'For label: {label} there are a total of {sum(to_remove)} outliers when considering z={z}')
+
+    print(f'Total number of data points cleaned / removed {len(idxs_to_drop)}')
+    
+    return original_df.drop(idxs_to_drop, axis=0).reset_index(drop=True)
+
+def drop_random_rows(original_df: pd.DataFrame, labels_to_clean: list, target_size) -> pd.DataFrame:
+    assert "Label" in original_df.columns
+    idxs_to_drop = []
+    for label in labels_to_clean:
+        num_to_drop = sum(original_df.Label == label) - target_size
+        if num_to_drop <= 0: #i.e. we're trying to drop more than currently exist for that current label
+            print(f'Skipping label {label} since there are less values in this class to begin with')
+            break
+        class_indices = original_df[original_df.Label == label].index
+
+        idcs_drop = np.random.choice(class_indices, size=num_to_drop, replace=False)
+        print(f'For label = {label} there are a total of {len(idcs_drop)} rows that will be dropped to get to a target size for this class to {target_size}')
+
+        idxs_to_drop.extend(idcs_drop.tolist())
+    return original_df.drop(labels=idxs_to_drop, axis=0).reset_index(drop=True)
+
+
+def split_data(df, train_ratio:float, validation_ratio:float, test_ratio:float, shuffle:bool=True):
+    '''Splits data into training, validation, test for training the model:
+    i.e. training can be .70, val can be .20, test can be .10'''
+    assert "Text" and "Label" in df.columns, "Your dataframe must have a column for text and its corresponding label"
+    dataX = df.Text
+    dataY = df.Label
+
+    # train is now 75% of the entire data set
+    # the _junk suffix means that we drop that variable completely
+    x_train, x_test, y_train, y_test = train_test_split(dataX, dataY, test_size=1 - train_ratio, shuffle=shuffle)
+
+    # test is now 10% of the initial data set
+    # validation is now 15% of the initial data set
+    x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio), shuffle=shuffle) 
+
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test)
+    
