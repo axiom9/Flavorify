@@ -160,4 +160,20 @@ def split_data(df, train_ratio:float, validation_ratio:float, test_ratio:float, 
     x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio), shuffle=shuffle) 
 
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
+
+def remove_extra_spaces(text):
+    '''This function will remove any extra spaces within a tweet, example: "hey   my  name is    anas" -> hey my name is anas'''
+    return " ".join(text.split())
+
+
+def re_order_labels(label):
+    '''Need to re-order labels because we combined some. This will impact us later when we declare loss as
+    Sparse Categorical Crossentropy unless we fix it via this function!
+    New mapping is as follows:
+    see emoji_labels_updated.jpg in /data/emoji_labels_updated.jpg'''
+
+    map = {0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 9:9, 10:10, 11:11, 12:12, 14:14, 15:15, 16:16, 17:17, 18:13, 19:8}
+    return map[label]
+    
+
     
