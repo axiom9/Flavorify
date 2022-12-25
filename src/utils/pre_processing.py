@@ -3,11 +3,19 @@
 import pandas as pd
 import numpy as np
 import nltk
+import tensorflow as tf
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import unicodedata
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
+
+import sys
+sys.path.insert(0, '/Users/anasputhawala/Desktop/Winterproj')
+from src.models.tfidf import config_tfidf
+import importlib
+importlib.reload(config_tfidf)
+
 
 # add appropriate words that will be ignored in the analysis
 ADDITIONAL_STOPWORDS = []
@@ -161,6 +169,21 @@ def split_data(df, train_ratio:float, validation_ratio:float, test_ratio:float, 
 
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
 
+def load_and_split(df, train_ratio:float, validation_ratio:float, test_ratio:float, shuffle:bool=True, num_classes:int=config_tfidf.num_classes):
+    assert "Text" and "Label" in df.columns, "Your dataframe must have a column for text and its corresponding label"
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = split_data(df, 
+                                                                      train_ratio,
+                                                                      validation_ratio,
+                                                                      test_ratio)
+
+    # to categorical for CCE loss
+    y_train = tf.keras.utils.to_categorical(np.array(y_train), num_classes=num_classes)
+    y_val = tf.keras.utils.to_categorical(np.array(y_val), num_classes=num_classes)
+    y_test = tf.keras.utils.to_categorical(np.array(y_test), num_classes=num_classes)
+
+    print(f'Shape of X_train: {x_train.shape}\nShape of y_train: {y_train.shape}\n\nShape of X_val: {x_val.shape}\nShape of y_val: {y_val.shape}\n\nShape of X_test: {x_test.shape}\nShape of y_test: {y_test.shape}')
+    return (np.array(x_train), y_train), (np.array(x_val), y_val), (np.array(x_test), y_test)
+
 def remove_extra_spaces(text):
     '''This function will remove any extra spaces within a tweet, example: "hey   my  name is    anas" -> hey my name is anas'''
     return " ".join(text.split())
@@ -172,8 +195,29 @@ def re_order_labels(label):
     New mapping is as follows:
     see emoji_labels_updated.jpg in /data/emoji_labels_updated.jpg'''
 
-    map = {0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 9:9, 10:10, 11:11, 12:12, 14:14, 15:15, 16:16, 17:17, 18:13, 19:8}
+    map = {0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 9:9, 10:13, 11:11, 12:12, 14:14, 15:15, 16:5, 17:17, 18:13, 19:8}
     return map[label]
-    
 
-    
+def drop_specific_labels(df:pd.DataFrame, labels):
+    '''Given the original dataframe and labels this will clean the dataframe some more and drop the label(s)
+    labels must be of type list (example: you want to drop label 5 --> [5], you want to drop 5 and 10 --> [5,10]'''
+    indcs_to_drop = []
+
+    assert isinstance(labels, list), 'Labels passed in must be of type list'
+    assert 'Label' in df.columns, 'Label column must exist in the dataframe you pass in'
+
+    for label in labels:
+        to_drop = df.Label==label
+        lst_indcs_label = list(np.where(to_drop)[0])
+        indcs_to_drop.extend(lst_indcs_label)
+        print(f'For label: {label} there were a total of {len(lst_indcs_label)} rows that will be dropped')
+
+    return df.drop(labels=indcs_to_drop, axis=0).reset_index(drop=True)
+
+def hashtag_mentions_removal(text):
+    # mentions = re.findall("@([a-zA-Z0-9_]{1,50})", text)
+    # hashtags = re.findall("#([a-zA-Z0-9_]{1,50})", text)
+    clean_tweet = re.sub("@[A-Za-z0-9_]+","", text)
+    clean_tweet = re.sub("#[A-Za-z0-9_]+","", clean_tweet)
+    clean_tweet = re.sub('[@#]', "", clean_tweet)
+    return remove_extra_spaces(clean_tweet)

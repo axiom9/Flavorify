@@ -1,14 +1,12 @@
 '''Config file for tfidf training'''
 import tensorflow as tf
+import pandas as pd
 
-num_classes = 18
+path = '/Users/anasputhawala/Desktop/Winterproj/src/utils/scraped_tweets2.csv'
+num_classes = len(pd.read_csv(path).Label.value_counts())
 vocab_size = 5000
 standardize='lower_and_strip_punctuation'
 split= 'whitespace'
-lr = 0.001
-batch_size=256
-epochs=100
 
-optimizer=tf.keras.optimizers.Adam(learning_rate=lr)
-loss = tf.keras.losses.SparseCategoricalCrossentropy()
+loss = tf.keras.losses.CategoricalCrossentropy()
 metrics=[tf.keras.metrics.CategoricalAccuracy()]

@@ -1,4 +1,6 @@
 emojify
 /data/data_crawled
 /src/utils/scraped_tweets.csv
+/src/utils/scraped_tweets2.csv
 /data/df_cleaned.csv
+/src/models/tfidf/trained_model
