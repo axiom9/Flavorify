@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import unicodedata
 from scipy.stats import zscore
+import sklearn
 from sklearn.model_selection import train_test_split
 
 import sys
