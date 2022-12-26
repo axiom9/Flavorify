@@ -4,3 +4,4 @@ emojify
 /src/utils/scraped_tweets2.csv
 /data/df_cleaned.csv
 /src/models/tfidf/trained_model
+src/utils/scraped_tweets3_flag_christmas.csv

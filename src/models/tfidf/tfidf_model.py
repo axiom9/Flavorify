@@ -46,14 +46,14 @@ class TfidfModel():
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Activation('relu')(x)
         x = tf.keras.layers.Dropout(rate=0.35, name='dropout1')(x)
-        x = tf.keras.layers.Dense(units=512, name='Dense2', kernel_regularizer=regularizers.L1(l1=1e-4))(x)
+        x = tf.keras.layers.Dense(units=512, name='Dense2')(x)
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Activation('relu')(x)
-        x = tf.keras.layers.Dense(units=256, name='Dense3', kernel_regularizer=regularizers.L1(l1=1e-4))(x)
+        x = tf.keras.layers.Dense(units=256, name='Dense3')(x)
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Activation('relu')(x)
         x = tf.keras.layers.Dropout(rate=0.35)(x)
-        x = tf.keras.layers.Dense(units=64, name='Dense4', kernel_regularizer=regularizers.L1(l1=1e-4))(x)
+        x = tf.keras.layers.Dense(units=64, name='Dense4')(x)
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Activation('relu')(x)
         outputs = tf.keras.layers.Dense(units=self.num_classes, activation='softmax', name='Classifier')(x)
@@ -87,7 +87,6 @@ class TfidfModel():
                                     epochs=epochs, 
                                     callbacks=callbacks)
                                     # validation_data=(x_val, y_val))
-
         return history
 
     def test(self, x, y, batch_size:int=128):
