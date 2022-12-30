@@ -7,3 +7,4 @@ emojify
 src/utils/scraped_tweets3_flag_christmas.csv
 src/models/fasttext/test.txt
 src/models/fasttext/train.txt
+src/models/fasttext/ft_model
