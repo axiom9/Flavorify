@@ -10,11 +10,11 @@ sys.path.insert(0, base_dir)
 from src.utils import pre_processing
 importlib.reload(pre_processing)
 
-def custom_standardize(text):
-        text = pre_processing.hashtag_mentions_removal(text) #removing hashtags and mentions
-        text = re.sub(r"[^\w\s]", "", text) # removing punctuation
-        text = pre_processing.remove_extra_spaces(text) # removing extra spaces that may result from removing punctuation
-        return tf.strings(text.lower())
+# def custom_standardize(text):
+#         text = pre_processing.hashtag_mentions_removal(text) #removing hashtags and mentions
+#         text = re.sub(r"[^\w\s]", "", text) # removing punctuation
+#         text = pre_processing.remove_extra_spaces(text) # removing extra spaces that may result from removing punctuation
+#         return tf.strings(text.lower())
 
 # Define model
 class VanillaModel(tf.keras.Model):
@@ -43,7 +43,7 @@ class VanillaModel(tf.keras.Model):
         self.relu = tf.keras.layers.Activation('relu')
         self.do2 = tf.keras.layers.Dropout(rate=0.25)
         self.clf = tf.keras.layers.Dense(16, 'softmax')
-        
+
     def call(self, input):
         x = self.textvec(input)
         x = self.emb(x)
@@ -58,4 +58,3 @@ class VanillaModel(tf.keras.Model):
         x = self.do2(x)
         x = self.clf(x)
         return x
-    
