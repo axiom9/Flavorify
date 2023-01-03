@@ -12,3 +12,4 @@ src/models/tfidf/model_weights
 src/app/model_weights
 
 src/app/app_test.ipynb
+model_weights
