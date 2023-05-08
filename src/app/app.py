@@ -38,5 +38,6 @@ def predict():
     sentence = request.form.values()
     return render_template('index.html', prediction_text=f'{model_predict(next(sentence))}')
 
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080)
